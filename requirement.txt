@@ -1,3 +1,7 @@
-cv2 (opencv-python) [4.4.0]
-pyzbar (https://github.com/NaturalHistoryMuseum/pyzbar) [can be installed via pip]
-os, argparse
+opencv-python==4.4.0.46
+pyzbar==0.1.8
+
+
+#cv2 (opencv-python) [4.4.0]
+#pyzbar (https://github.com/NaturalHistoryMuseum/pyzbar) [can be installed via pip]
+#os, argparse
