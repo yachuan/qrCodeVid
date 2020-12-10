@@ -19,20 +19,33 @@ class VidProcessor():
         count = 1 # start with frame num 1
         while success:
             detected, qrcodes = self.detect_QRcode(image)
+            cv2.putText(image, str(count), (60,60), cv2.FONT_HERSHEY_SIMPLEX,
+                                1,(0, 0, 255), 2)
             if detected:
                 save = os.path.join(self.save_to, "frame%d.jpg" % count)
                 #cv2.imwrite(save, image)     # save frame as JPEG file   
                 for i in qrcodes:
                     self.update_dict(i, count)
-                    if count % 20 == 0:
-                        print(count, "{} ({})".format(i[1], i[2]))
-                        
-
+                    barcode = i[0]
+                    (x, y, w, h) = barcode.rect
+                    cv2.rectangle(image, (x, y), (x + w, y + h), (0, 0, 255), 2)
+                    text = "{} ({})".format(i[1], i[2])
+                    cv2.putText(image, text, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX,
+                                1, (0, 0, 255), 2)
+                    
+                    if count % 30 == 0:
+                        print(count, text)
+            cv2.imshow('fm', image)
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
             success,image = vidcap.read()
             #print('Read a new frame: ', success)
             count += 1
         print('Total frame num:', count)
         print(self.qrcodes)
+        
+        vidcap.release()
+        cv2.destroyAllWindows()
     
     def detect_QRcode(self, img, code=None):
         res = []
