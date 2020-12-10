@@ -21,7 +21,7 @@ class VidProcessor():
             detected, qrcodes = self.detect_QRcode(image)
             if detected:
                 save = os.path.join(self.save_to, "frame%d.jpg" % count)
-                cv2.imwrite(save, image)     # save frame as JPEG file   
+                #cv2.imwrite(save, image)     # save frame as JPEG file   
                 for i in qrcodes:
                     self.update_dict(i, count)
                     if count % 5 == 0:
