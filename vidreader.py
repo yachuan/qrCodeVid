@@ -24,7 +24,7 @@ class VidProcessor():
                 #cv2.imwrite(save, image)     # save frame as JPEG file   
                 for i in qrcodes:
                     self.update_dict(i, count)
-                    if count % 5 == 0:
+                    if count % 20 == 0:
                         print(count, "{} ({})".format(i[1], i[2]))
                         
 
