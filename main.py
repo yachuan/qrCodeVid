@@ -18,5 +18,6 @@ if __name__ == '__main__':
 
     save = 'pix'
     r = VidProcessor(path, save)
-    r.read_mp4vid()
+    #r.read_mp4vidQR()
+    r.read_mp4vidAR()
 

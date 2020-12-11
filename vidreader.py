@@ -1,6 +1,8 @@
 import cv2
 import os
 from pyzbar.pyzbar import decode
+import cv2.aruco as aruco
+import time
 
 class VidProcessor():
 
@@ -11,8 +13,10 @@ class VidProcessor():
         if not os.path.isdir(self.save_to):
             os.makedirs(self.save_to)
         self.qrcodes = {}
+        self.splits = []
+        self.stop = False
 
-    def read_mp4vid(self):
+    def read_mp4vidQR(self):
 
         vidcap = cv2.VideoCapture(self.path)
         success,image = vidcap.read()
@@ -79,6 +83,59 @@ class VidProcessor():
         # cv2.waitKey(0)
         return True, res
     
+
+    def read_mp4vidAR(self):
+
+        vidcap = cv2.VideoCapture(self.path)
+        success,image = vidcap.read()
+        count = 1 # start with frame num 1
+        while success:
+            cv2.putText(image, str(count), (60,60), cv2.FONT_HERSHEY_SIMPLEX,
+                                1,(0, 0, 255), 2)
+            
+            detected, image, datatuple = self.detectARcode(image)
+            
+            if detected:
+                save = os.path.join(self.save_to, "frame%d.jpg" % count)
+                #cv2.imwrite(save, image)     # save frame as JPEG file  
+                corners, ids, rejectedImgPoints = datatuple
+
+                idlist = ids.tolist()
+                for i in idlist:
+                    detection = self.update_AR(i, count)
+                    if count % 30 == 0:
+                        print(count, 'detected' + detection)
+            cv2.imshow('fm', image)
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
+            success,image = vidcap.read()
+            count += 1
+            time.sleep(0.01)
+        print('Total frame num:', count)
+        print(self.qrcodes)
+        if 'START' in self.qrcodes and 'STOP' in self.qrcodes:
+            pair = (self.qrcodes['START'], self.qrcodes['STOP'])
+            self.splits.append(pair)
+            
+        print(self.splits)
+        
+        vidcap.release()
+        cv2.destroyAllWindows()
+
+    def detectARcode(self, image):
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        aruco_dict = aruco.Dictionary_get(aruco.DICT_6X6_1000)
+        arucoParameters = aruco.DetectorParameters_create()
+        corners, ids, rejectedImgPoints = aruco.detectMarkers(
+            gray, aruco_dict, parameters=arucoParameters)
+
+        if ids is None or len(ids) == 0:
+            return False, image, (corners, ids, rejectedImgPoints)
+        # print(corners, 'raaaaaaaaaaaaaaaaaa')
+        # print(ids, 'zxxxxxxxxxxxxxxxxxxx')
+        image = aruco.drawDetectedMarkers(image, corners, ids)
+        return True, image, (corners, ids, rejectedImgPoints)
+
     def update_dict(self, qrcode_tuple, frame_num):
         qrcode = qrcode_tuple[0]
         data = qrcode_tuple[1]
@@ -89,3 +146,28 @@ class VidProcessor():
                 self.qrcodes[data] = (self.qrcodes[data][0], frame_num)
         else:
             self.qrcodes[data] = (frame_num, frame_num)
+
+    def update_AR(self, ids, frame_num):
+        #qrcode = qrcode_tuple[0]
+        data = ids[0]
+        #qrtype = qrcode_tuple[2]
+
+        if data == 0:
+            data = 'START'
+            if self.stop:
+                pair = (self.qrcodes['START'], self.qrcodes['STOP'])
+                self.splits.append(pair)
+                self.qrcodes = dict()
+                self.stop = False
+        elif data == 99:
+            data = 'STOP'
+            self.stop = True
+
+        if data in self.qrcodes:
+            if frame_num > self.qrcodes[data][1]:
+                self.qrcodes[data] = (self.qrcodes[data][0], frame_num)
+                
+        else:
+            self.qrcodes[data] = (frame_num, frame_num)
+
+        return data
