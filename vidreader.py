@@ -16,7 +16,7 @@ class VidProcessor():
         self.qrcodes = {}
         self.splits = []
         self.stop = False
-        self.OFFSET = 60
+        self.OFFSET = 20
 
     def read_mp4vidQR(self):
 

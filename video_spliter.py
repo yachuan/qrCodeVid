@@ -6,7 +6,8 @@ def split_video(start_time, end_time, file_path, dest_name):
     if file_path.endswith(".mp4"):
         with VideoFileClip(file_path) as video:
             clipped = video.subclip(start_time, end_time)
-            clipped.write_videofile(dest_name+".mp4", audio_codec='aac')
+            clipped.write_videofile(dest_name+".mp4", audio=False)
+            clipped.close()
 
 
 
