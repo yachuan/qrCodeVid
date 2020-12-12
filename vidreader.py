@@ -3,6 +3,7 @@ import os
 from pyzbar.pyzbar import decode
 import cv2.aruco as aruco
 import time
+from video_spliter import split_video
 
 class VidProcessor():
 
@@ -15,6 +16,7 @@ class VidProcessor():
         self.qrcodes = {}
         self.splits = []
         self.stop = False
+        self.OFFSET = 60
 
     def read_mp4vidQR(self):
 
@@ -93,8 +95,17 @@ class VidProcessor():
             cv2.putText(image, str(count), (60,60), cv2.FONT_HERSHEY_SIMPLEX,
                                 1,(0, 0, 255), 2)
             
+            if len(self.splits) > 0:
+                pair = self.splits.pop(0)
+                start_pair = pair[0]
+                end_pair = pair[1]
+                start_fm = (start_pair[1] + self.OFFSET)/30
+                end_fm = (end_pair[0] - self.OFFSET)/30
+                dest = os.path.join(self.save_to, self.path.split('/')[-1].split('.')[0] + str(round(start_fm,2)) + '_' + str(round(end_fm,2)))
+                print(start_fm, end_fm)
+                split_video(start_fm, end_fm, self.path, dest)
+
             detected, image, datatuple = self.detectARcode(image)
-            
             if detected:
                 save = os.path.join(self.save_to, "frame%d.jpg" % count)
                 #cv2.imwrite(save, image)     # save frame as JPEG file  
@@ -116,7 +127,15 @@ class VidProcessor():
         if 'START' in self.qrcodes and 'STOP' in self.qrcodes:
             pair = (self.qrcodes['START'], self.qrcodes['STOP'])
             self.splits.append(pair)
-            
+        if len(self.splits) > 0:
+                pair = self.splits.pop(0)
+                start_pair = pair[0]
+                end_pair = pair[1]
+                start_fm = (start_pair[1] + self.OFFSET)/30
+                end_fm = (end_pair[0] - self.OFFSET)/30
+                dest = os.path.join(self.save_to, self.path.split('/')[-1].split('.')[0] + "{0:.2f}".format(start_fm) + '_' + str(round(end_fm,2)))
+                print(start_fm, end_fm)
+                split_video(start_fm, end_fm, self.path, dest)
         print(self.splits)
         
         vidcap.release()
