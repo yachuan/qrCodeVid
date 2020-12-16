@@ -1,13 +1,13 @@
 import cv2
 import os
-from pyzbar.pyzbar import decode
+#from pyzbar.pyzbar import decode
 import cv2.aruco as aruco
 import time
 from video_spliter import split_video
 
 class VidProcessor():
 
-    def __init__(self, vid_path, save_path):
+    def __init__(self, vid_path, save_path, args):
 
         self.path = vid_path
         self.save_to = save_path
@@ -17,6 +17,7 @@ class VidProcessor():
         self.splits = []
         self.stop = False
         self.OFFSET = 20
+        self.args = args
 
     def read_mp4vidQR(self):
 
@@ -58,7 +59,7 @@ class VidProcessor():
         # load the input image
         image = img
         # find the barcodes in the image and decode each of the barcodes
-        barcodes = decode(image)
+        # barcodes = decode(image)
         if len(barcodes) == 0:
             return False, None
         # loop over the detected barcodes
@@ -92,6 +93,8 @@ class VidProcessor():
         success,image = vidcap.read()
         count = 1 # start with frame num 1
         while success:
+            if self.args['mirror']:
+                image = cv2.flip(image, 0)
             cv2.putText(image, str(count), (60,60), cv2.FONT_HERSHEY_SIMPLEX,
                                 1,(0, 0, 255), 2)
             
@@ -103,7 +106,11 @@ class VidProcessor():
                 end_fm = (end_pair[0] - self.OFFSET)/30
                 dest = os.path.join(self.save_to, self.path.split('/')[-1].split('.')[0] + str(round(start_fm,2)) + '_' + str(round(end_fm,2)))
                 print(start_fm, end_fm)
-                split_video(start_fm, end_fm, self.path, dest)
+                if start_fm < end_fm:
+                    print('splitting')
+                    split_video(start_fm, end_fm, self.path, dest)
+                else:
+                    print('not valid start and stop, gesture too short')
 
             detected, image, datatuple = self.detectARcode(image)
             if detected:
@@ -135,7 +142,11 @@ class VidProcessor():
                 end_fm = (end_pair[0] - self.OFFSET)/30
                 dest = os.path.join(self.save_to, self.path.split('/')[-1].split('.')[0] + "{0:.2f}".format(start_fm) + '_' + str(round(end_fm,2)))
                 print(start_fm, end_fm)
-                split_video(start_fm, end_fm, self.path, dest)
+                if start_fm < end_fm:
+                    print('splitting')
+                    split_video(start_fm, end_fm, self.path, dest)
+                else:
+                    print('not valid start and stop, gesture too short')
         print(self.splits)
         
         vidcap.release()

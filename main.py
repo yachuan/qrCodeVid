@@ -9,6 +9,7 @@ if __name__ == '__main__':
     ap = argparse.ArgumentParser()
     ap.add_argument("-v", "--video", required=True, default='data/qrvidex1210.mp4',
         help="path to input video")
+    ap.add_argument("--mirror", default=False, action = "store_true")
     args = vars(ap.parse_args())
 
     # load the input image
@@ -17,7 +18,7 @@ if __name__ == '__main__':
     #path = 'data/qrvidex1210dark.mp4'
 
     save = 'pix'
-    r = VidProcessor(path, save)
+    r = VidProcessor(path, save, args)
     #r.read_mp4vidQR()
     r.read_mp4vidAR()
 
